@@ -9,18 +9,22 @@ import java.io.Serializable;
 public class RecordId implements Serializable {
 
     private static final long serialVersionUID = 1L;
+    private final PageId pageId;
+    private final int tupleNo;
 
     /**
      * Creates a new RecordId referring to the specified PageId and tuple
      * number.
      * 
      * @param pid
-     *            the pageid of the page on which the tuple resides
+     *                the pageid of the page on which the tuple resides
      * @param tupleno
-     *            the tuple number within the page.
+     *                the tuple number within the page.
      */
     public RecordId(PageId pid, int tupleno) {
         // some code goes here
+        this.pageId = pid;
+        this.tupleNo = tupleno;
     }
 
     /**
@@ -28,7 +32,7 @@ public class RecordId implements Serializable {
      */
     public int tupleno() {
         // some code goes here
-        return 0;
+        return this.tupleNo;
     }
 
     /**
@@ -36,7 +40,7 @@ public class RecordId implements Serializable {
      */
     public PageId getPageId() {
         // some code goes here
-        return null;
+        return this.pageId;
     }
 
     /**
@@ -48,7 +52,12 @@ public class RecordId implements Serializable {
     @Override
     public boolean equals(Object o) {
         // some code goes here
-        throw new UnsupportedOperationException("implement this");
+        if (!(o instanceof RecordId) || ((RecordId) o).tupleno() != this.tupleno()
+                || !((RecordId) o).getPageId().equals(this.getPageId())) {
+            return false;
+        }
+        return true;
+        // throw new UnsupportedOperationException("implement this");
     }
 
     /**
@@ -60,7 +69,8 @@ public class RecordId implements Serializable {
     @Override
     public int hashCode() {
         // some code goes here
-        throw new UnsupportedOperationException("implement this");
+        return this.tupleno(); // THIS has to be fixed properly
+        // throw new UnsupportedOperationException("implement this");
 
     }
 

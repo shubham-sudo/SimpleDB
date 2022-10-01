@@ -18,12 +18,19 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class Catalog {
 
+    private ConcurrentHashMap<Integer, String> tableNameHashMap;
+    private ConcurrentHashMap<Integer, DbFile> dbFileHashMap;
+    private ConcurrentHashMap<Integer, String> pKeyFieldHashMap;
+
     /**
      * Constructor.
      * Creates a new, empty catalog.
      */
     public Catalog() {
         // some code goes here
+        tableNameHashMap = new ConcurrentHashMap<>();
+        dbFileHashMap = new ConcurrentHashMap<>();
+        pKeyFieldHashMap = new ConcurrentHashMap<>();
     }
 
     /**
@@ -42,6 +49,9 @@ public class Catalog {
      */
     public void addTable(DbFile file, String name, String pkeyField) {
         // some code goes here
+        tableNameHashMap.put(file.getId(), name);
+        dbFileHashMap.put(file.getId(), file);
+        pKeyFieldHashMap.put(file.getId(), pkeyField);
     }
 
     public void addTable(DbFile file, String name) {
@@ -68,7 +78,12 @@ public class Catalog {
      */
     public int getTableId(String name) throws NoSuchElementException {
         // some code goes here
-        return 0;
+        for (Integer key : tableNameHashMap.keySet()) {
+            if (tableNameHashMap.get(key).equals(name)) {
+                return key;
+            }
+        }
+        throw new NoSuchElementException("No Such Element Found");
     }
 
     /**
@@ -80,7 +95,10 @@ public class Catalog {
      */
     public TupleDesc getTupleDesc(int tableid) throws NoSuchElementException {
         // some code goes here
-        return null;
+        if (!dbFileHashMap.containsKey(tableid)) {
+            throw new NoSuchElementException("No Such Element Found");
+        }
+        return dbFileHashMap.get(tableid).getTupleDesc();
     }
 
     /**
@@ -92,27 +110,33 @@ public class Catalog {
      */
     public DbFile getDatabaseFile(int tableid) throws NoSuchElementException {
         // some code goes here
-        return null;
+        if (!dbFileHashMap.containsKey(tableid)) {
+            throw new NoSuchElementException("No Such Element Found");
+        }
+        return dbFileHashMap.get(tableid);
     }
 
     public String getPrimaryKey(int tableid) {
         // some code goes here
-        return null;
+        return pKeyFieldHashMap.get(tableid);
     }
 
     public Iterator<Integer> tableIdIterator() {
         // some code goes here
-        return null;
+        return tableNameHashMap.keySet().iterator();
     }
 
     public String getTableName(int id) {
         // some code goes here
-        return null;
+        return tableNameHashMap.get(id);
     }
 
     /** Delete all tables from the catalog */
     public void clear() {
         // some code goes here
+        tableNameHashMap.clear();
+        dbFileHashMap.clear();
+        pKeyFieldHashMap.clear();
     }
 
     /**

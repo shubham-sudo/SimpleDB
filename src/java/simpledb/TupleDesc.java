@@ -3,8 +3,6 @@ package simpledb;
 import java.io.Serializable;
 import java.util.*;
 
-import org.hamcrest.core.IsInstanceOf;
-
 /**
  * TupleDesc describes the schema of a tuple.
  */
