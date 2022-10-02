@@ -18,7 +18,8 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class Catalog {
 
-    private ConcurrentHashMap<Integer, String> tableNameHashMap;
+    private ConcurrentHashMap<String, Integer> tableNameHashMap;
+    private ConcurrentHashMap<Integer, String> fileIdHashMap;
     private ConcurrentHashMap<Integer, DbFile> dbFileHashMap;
     private ConcurrentHashMap<Integer, String> pKeyFieldHashMap;
 
@@ -29,6 +30,7 @@ public class Catalog {
     public Catalog() {
         // some code goes here
         tableNameHashMap = new ConcurrentHashMap<>();
+        fileIdHashMap = new ConcurrentHashMap<>();
         dbFileHashMap = new ConcurrentHashMap<>();
         pKeyFieldHashMap = new ConcurrentHashMap<>();
     }
@@ -49,7 +51,8 @@ public class Catalog {
      */
     public void addTable(DbFile file, String name, String pkeyField) {
         // some code goes here
-        tableNameHashMap.put(file.getId(), name);
+        tableNameHashMap.put(name, file.getId());
+        fileIdHashMap.put(file.getId(), name);
         dbFileHashMap.put(file.getId(), file);
         pKeyFieldHashMap.put(file.getId(), pkeyField);
     }
@@ -78,10 +81,8 @@ public class Catalog {
      */
     public int getTableId(String name) throws NoSuchElementException {
         // some code goes here
-        for (Integer key : tableNameHashMap.keySet()) {
-            if (tableNameHashMap.get(key).equals(name)) {
-                return key;
-            }
+        if (name != null && tableNameHashMap.containsKey(name)) {
+            return tableNameHashMap.get(name);
         }
         throw new NoSuchElementException("No Such Element Found");
     }
@@ -123,12 +124,12 @@ public class Catalog {
 
     public Iterator<Integer> tableIdIterator() {
         // some code goes here
-        return tableNameHashMap.keySet().iterator();
+        return dbFileHashMap.keySet().iterator();
     }
 
     public String getTableName(int id) {
         // some code goes here
-        return tableNameHashMap.get(id);
+        return fileIdHashMap.get(id);
     }
 
     /** Delete all tables from the catalog */
