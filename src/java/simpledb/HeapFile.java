@@ -17,6 +17,7 @@ public class HeapFile implements DbFile {
 
     private final TupleDesc tupleDesc;
     private final File file;
+    private RandomAccessFile raf;
 
     /**
      * Constructs a heap file backed by the specified file.
@@ -70,6 +71,17 @@ public class HeapFile implements DbFile {
     // see DbFile.java for javadocs
     public Page readPage(PageId pid) {
         // some code goes here
+        byte[] data = new byte[BufferPool.getPageSize()];
+        Page page;
+        try {
+            raf = new RandomAccessFile(file, "r");
+            raf.read(data, pid.pageNumber(), BufferPool.getPageSize());
+            page = new HeapPage((HeapPageId) pid, data);
+            raf.close();
+            return page;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         return null;
     }
 
@@ -84,7 +96,15 @@ public class HeapFile implements DbFile {
      */
     public int numPages() {
         // some code goes here
-        return (int) file.length();
+        int numberOfPages = 0;
+        try {
+            raf = new RandomAccessFile(file, "r");
+            numberOfPages = (int) raf.length() / BufferPool.getPageSize();
+            raf.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return numberOfPages;
     }
 
     // see DbFile.java for javadocs
@@ -106,7 +126,45 @@ public class HeapFile implements DbFile {
     // see DbFile.java for javadocs
     public DbFileIterator iterator(TransactionId tid) {
         // some code goes here
-        return null;
-    }
+        DbFileIterator it = new DbFileIterator() {
+            RandomAccessFile rf;
+            Tuple tuple;
 
+            @Override
+            public void open() throws DbException, TransactionAbortedException {
+                try {
+                    rf = new RandomAccessFile(file, "r");
+                } catch (IOException e) {
+                    throw new DbException(e.getMessage());
+                }
+            }
+
+            @Override
+            public boolean hasNext() throws DbException, TransactionAbortedException {
+                if (rf == null) {
+                    return false;
+                }
+            }
+
+            @Override
+            public Tuple next() throws DbException, TransactionAbortedException, NoSuchElementException {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            @Override
+            public void rewind() throws DbException, TransactionAbortedException {
+                // TODO Auto-generated method stub
+
+            }
+
+            @Override
+            public void close() {
+                // TODO Auto-generated method stub
+
+            }
+
+        };
+        return it;
+    }
 }
