@@ -72,7 +72,7 @@ public class HeapFile implements DbFile {
     public Page readPage(PageId pid) {
         // some code goes here
         byte[] data = new byte[BufferPool.getPageSize()];
-        Page page;
+        Page page = null;
         int startAddress = (BufferPool.getPageSize() * pid.pageNumber());
         try {
             raf = new RandomAccessFile(file, "r");
@@ -83,7 +83,7 @@ public class HeapFile implements DbFile {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return null;
+        return page;
     }
 
     // see DbFile.java for javadocs
@@ -128,75 +128,55 @@ public class HeapFile implements DbFile {
     public DbFileIterator iterator(TransactionId tid) {
         // some code goes here
         DbFileIterator it = new DbFileIterator() {
-            BufferPool bufferPool;
-            RandomAccessFile rf;
             int currentPage = 0;
             Iterator<Tuple> tIterator;
-            boolean isClosed = true;
-            Page page;
 
             @Override
             public void open() throws DbException, TransactionAbortedException {
-                try {
-                    rf = new RandomAccessFile(file, "r");
-                    bufferPool = Database.getBufferPool();
-                    HeapPageId hPageId = new HeapPageId(getId(), currentPage++);
-                    page = bufferPool.getPage(tid, hPageId, null);
-                    tIterator = (new HeapPage(hPageId, page.getPageData())).iterator();
-                    isClosed = false;
-                } catch (IOException e) {
-                    throw new DbException(e.getMessage());
-                }
+                HeapPageId pid = new HeapPageId(getId(), currentPage);
+                tIterator = getTuplesIterator(pid);
+            }
+
+            private Iterator<Tuple> getTuplesIterator(HeapPageId pid) throws TransactionAbortedException, DbException {
+                HeapPage page = (HeapPage) Database.getBufferPool().getPage(tid, pid, Permissions.READ_ONLY);
+                return page.iterator();
             }
 
             @Override
             public boolean hasNext() throws DbException, TransactionAbortedException {
-                if (rf == null) {
+                if (tIterator == null) {
                     return false;
                 } else if (tIterator.hasNext()) {
                     return true;
                 }
-                return currentPage < numPages();
+                if (currentPage < numPages() - 1) {
+                    currentPage++;
+                    HeapPageId pid = new HeapPageId(getId(), currentPage);
+                    tIterator = getTuplesIterator(pid);
+                    return tIterator.hasNext();
+                } else {
+                    return false;
+                }
             }
 
             @Override
             public Tuple next() throws DbException, TransactionAbortedException, NoSuchElementException {
-                if (rf == null || isClosed) {
-                    throw new NoSuchElementException();
-                } else if (tIterator.hasNext()) {
-                    return tIterator.next();
-                } else {
-                    HeapPageId hPageId = new HeapPageId(getId(), currentPage++);
-                    try {
-                        page = bufferPool.getPage(tid, hPageId, null);
-                        tIterator = (new HeapPage(hPageId, page.getPageData())).iterator();
-                    } catch (IOException e) {
-                        throw new DbException(e.getMessage());
-                    }
+                if (!hasNext()) {
+                    throw new NoSuchElementException("No Such Element Found");
                 }
-                if (tIterator.hasNext()) {
-                    return tIterator.next();
-                } else {
-                    throw new NoSuchElementException();
-                }
+                return tIterator.next();
             }
 
             @Override
             public void rewind() throws DbException, TransactionAbortedException {
-                page = null;
-                tIterator = null;
                 currentPage = 0;
                 open();
             }
 
             @Override
             public void close() {
-                try {
-                    rf.close();
-                    isClosed = true;
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                currentPage = 0;
+                tIterator = null;
             }
 
         };
