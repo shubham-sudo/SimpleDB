@@ -333,7 +333,7 @@ public class HeapPage implements Page {
 
             @Override
             public boolean hasNext() {
-                return currentIndex < tuples.length && tuples[currentIndex] != null;
+                return currentIndex < (numSlots - getNumEmptySlots());
             }
 
             @Override

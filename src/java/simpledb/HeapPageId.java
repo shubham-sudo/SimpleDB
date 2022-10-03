@@ -42,7 +42,7 @@ public class HeapPageId implements PageId {
      */
     public int hashCode() {
         // some code goes here
-        return Integer.parseInt("" + this.tableId + this.pgNo);
+        return ("" + this.tableId + this.pgNo).hashCode();
         // throw new UnsupportedOperationException("implement this");
     }
 

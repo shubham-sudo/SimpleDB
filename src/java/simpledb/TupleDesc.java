@@ -256,6 +256,11 @@ public class TupleDesc implements Serializable {
      */
     public String toString() {
         // some code goes here
-        return "";
+        String[] toStringName = new String[getSize()];
+
+        for (int i = 0; i < getSize(); i++) {
+            toStringName[i] = tItems[i].fieldType + "(" + tItems[i].fieldName + ")";
+        }
+        return String.join(",", toStringName);
     }
 }

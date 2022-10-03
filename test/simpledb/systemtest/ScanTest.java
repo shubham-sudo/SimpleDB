@@ -16,7 +16,7 @@ import simpledb.*;
 
 /**
  * Dumps the contents of a table.
- * args[1] is the number of columns.  E.g., if it's 5, then ScanTest will end
+ * args[1] is the number of columns. E.g., if it's 5, then ScanTest will end
  * up dumping the contents of f4.0.txt.
  */
 public class ScanTest extends SimpleDbTestBase {
@@ -36,15 +36,16 @@ public class ScanTest extends SimpleDbTestBase {
     }
 
     /** Scan 1-4 columns. */
-    @Test public void testSmall() throws IOException, DbException, TransactionAbortedException {
-        int[] columnSizes = new int[]{1, 2, 3, 4};
-        int[] rowSizes =
-                new int[]{0, 1, 2, 511, 512, 513, 1023, 1024, 1025, 4096 + r.nextInt(4096)};
+    @Test
+    public void testSmall() throws IOException, DbException, TransactionAbortedException {
+        int[] columnSizes = new int[] { 1, 2, 3, 4 };
+        int[] rowSizes = new int[] { 0, 1, 2, 511, 512, 513, 1023, 1024, 1025, 4096 + r.nextInt(4096) };
         validateScan(columnSizes, rowSizes);
     }
 
     /** Test that rewinding a SeqScan iterator works. */
-    @Test public void testRewind() throws IOException, DbException, TransactionAbortedException {
+    @Test
+    public void testRewind() throws IOException, DbException, TransactionAbortedException {
         ArrayList<ArrayList<Integer>> tuples = new ArrayList<ArrayList<Integer>>();
         HeapFile f = SystemTestUtil.createRandomHeapFile(2, 1000, null, tuples);
 
@@ -67,10 +68,14 @@ public class ScanTest extends SimpleDbTestBase {
         Database.getBufferPool().transactionComplete(tid);
     }
 
-    /** Verifies that the buffer pool is actually caching data.
+    /**
+     * Verifies that the buffer pool is actually caching data.
+     * 
      * @throws TransactionAbortedException
-     * @throws DbException */
-    @Test public void testCache() throws IOException, DbException, TransactionAbortedException {
+     * @throws DbException
+     */
+    @Test
+    public void testCache() throws IOException, DbException, TransactionAbortedException {
         /** Counts the number of readPage operations. */
         class InstrumentedHeapFile extends HeapFile {
             public InstrumentedHeapFile(File f, TupleDesc td) {
@@ -89,7 +94,7 @@ public class ScanTest extends SimpleDbTestBase {
         // Create the table
         final int PAGES = 30;
         ArrayList<ArrayList<Integer>> tuples = new ArrayList<ArrayList<Integer>>();
-        File f = SystemTestUtil.createRandomHeapFileUnopened(1, 992*PAGES, 1000, null, tuples);
+        File f = SystemTestUtil.createRandomHeapFileUnopened(1, 992 * PAGES, 1000, null, tuples);
         TupleDesc td = Utility.getTupleDesc(1);
         InstrumentedHeapFile table = new InstrumentedHeapFile(f, td);
         Database.getCatalog().addTable(table, SystemTestUtil.getUUID());

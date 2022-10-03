@@ -73,11 +73,12 @@ public class HeapFile implements DbFile {
         // some code goes here
         byte[] data = new byte[BufferPool.getPageSize()];
         Page page;
+        int startAddress = (BufferPool.getPageSize() * pid.pageNumber());
         try {
             raf = new RandomAccessFile(file, "r");
-            raf.read(data, pid.pageNumber(), BufferPool.getPageSize());
+            raf.seek(startAddress);
+            raf.read(data);
             page = new HeapPage((HeapPageId) pid, data);
-            raf.close();
             return page;
         } catch (IOException e) {
             e.printStackTrace();
@@ -127,13 +128,19 @@ public class HeapFile implements DbFile {
     public DbFileIterator iterator(TransactionId tid) {
         // some code goes here
         DbFileIterator it = new DbFileIterator() {
+            BufferPool bufferPool;
             RandomAccessFile rf;
-            Tuple tuple;
+            int currentPage = 0;
+            Iterator<Tuple> tIterator;
+            boolean isClosed = true;
+            Page page;
 
             @Override
             public void open() throws DbException, TransactionAbortedException {
                 try {
                     rf = new RandomAccessFile(file, "r");
+                    bufferPool = new BufferPool(BufferPool.DEFAULT_PAGES);
+                    isClosed = false;
                 } catch (IOException e) {
                     throw new DbException(e.getMessage());
                 }
@@ -141,27 +148,50 @@ public class HeapFile implements DbFile {
 
             @Override
             public boolean hasNext() throws DbException, TransactionAbortedException {
-                if (rf == null) {
+                if (rf == null || (currentPage == numPages() && !tIterator.hasNext())) {
                     return false;
                 }
+                return true;
             }
 
             @Override
             public Tuple next() throws DbException, TransactionAbortedException, NoSuchElementException {
-                // TODO Auto-generated method stub
-                return null;
+                if (rf == null || isClosed) {
+                    throw new NoSuchElementException();
+                }
+                if (page == null || tIterator == null || !tIterator.hasNext()) {
+                    page = bufferPool.getPage(tid, new HeapPageId(getId(), currentPage), null);
+                    try {
+                        tIterator = (new HeapPage(new HeapPageId(getId(), currentPage), page.getPageData())).iterator();
+                    } catch (IOException e) {
+                        throw new DbException(e.getMessage());
+                    }
+                    currentPage++;
+                }
+                try {
+                    return tIterator.next();
+                } catch (Exception e) {
+                    throw new NoSuchElementException(e.getMessage());
+                }
             }
 
             @Override
             public void rewind() throws DbException, TransactionAbortedException {
                 // TODO Auto-generated method stub
-
+                page = null;
+                tIterator = null;
+                currentPage = 0;
+                open();
             }
 
             @Override
             public void close() {
-                // TODO Auto-generated method stub
-
+                try {
+                    rf.close();
+                    isClosed = true;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
 
         };
