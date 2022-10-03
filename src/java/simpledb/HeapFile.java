@@ -139,7 +139,10 @@ public class HeapFile implements DbFile {
             public void open() throws DbException, TransactionAbortedException {
                 try {
                     rf = new RandomAccessFile(file, "r");
-                    bufferPool = new BufferPool(BufferPool.DEFAULT_PAGES);
+                    bufferPool = Database.getBufferPool();
+                    HeapPageId hPageId = new HeapPageId(getId(), currentPage++);
+                    page = bufferPool.getPage(tid, hPageId, null);
+                    tIterator = (new HeapPage(hPageId, page.getPageData())).iterator();
                     isClosed = false;
                 } catch (IOException e) {
                     throw new DbException(e.getMessage());
@@ -148,36 +151,38 @@ public class HeapFile implements DbFile {
 
             @Override
             public boolean hasNext() throws DbException, TransactionAbortedException {
-                if (rf == null || (currentPage == numPages() && !tIterator.hasNext())) {
+                if (rf == null) {
                     return false;
+                } else if (tIterator.hasNext()) {
+                    return true;
                 }
-                return true;
+                return currentPage < numPages();
             }
 
             @Override
             public Tuple next() throws DbException, TransactionAbortedException, NoSuchElementException {
                 if (rf == null || isClosed) {
                     throw new NoSuchElementException();
-                }
-                if (page == null || tIterator == null || !tIterator.hasNext()) {
-                    page = bufferPool.getPage(tid, new HeapPageId(getId(), currentPage), null);
+                } else if (tIterator.hasNext()) {
+                    return tIterator.next();
+                } else {
+                    HeapPageId hPageId = new HeapPageId(getId(), currentPage++);
                     try {
-                        tIterator = (new HeapPage(new HeapPageId(getId(), currentPage), page.getPageData())).iterator();
+                        page = bufferPool.getPage(tid, hPageId, null);
+                        tIterator = (new HeapPage(hPageId, page.getPageData())).iterator();
                     } catch (IOException e) {
                         throw new DbException(e.getMessage());
                     }
-                    currentPage++;
                 }
-                try {
+                if (tIterator.hasNext()) {
                     return tIterator.next();
-                } catch (Exception e) {
-                    throw new NoSuchElementException(e.getMessage());
+                } else {
+                    throw new NoSuchElementException();
                 }
             }
 
             @Override
             public void rewind() throws DbException, TransactionAbortedException {
-                // TODO Auto-generated method stub
                 page = null;
                 tIterator = null;
                 currentPage = 0;

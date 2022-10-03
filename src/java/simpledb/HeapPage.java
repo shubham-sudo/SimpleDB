@@ -309,7 +309,19 @@ public class HeapPage implements Page {
      */
     public boolean isSlotUsed(int i) {
         // some code goes here
-        int headerIndex = (int) (i / 8);
+        if (i > (header.length * 8)) {
+            return false;
+        }
+
+        int headerIndex;
+
+        if (i == (header.length * 8) && i % 8 == 0) {
+            headerIndex = (int) (i / 8) - 1;
+            i = i + 7;
+        } else {
+            headerIndex = (int) (i / 8);
+        }
+
         return (header[headerIndex] & (1 << (i % 8))) != 0;
     }
 
@@ -333,7 +345,7 @@ public class HeapPage implements Page {
 
             @Override
             public boolean hasNext() {
-                return currentIndex < (numSlots - getNumEmptySlots());
+                return currentIndex < (numSlots - getNumEmptySlots()) && tuples[currentIndex] != null;
             }
 
             @Override

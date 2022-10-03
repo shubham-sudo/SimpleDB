@@ -118,13 +118,13 @@ simpledb.Tuple
 java.util.NoSuchElementException
 java.util.Iterator
 simpledb.HeapFile
+simpledb.Database
 simpledb.TransactionAbortedException
 simpledb.BufferPool
 java.lang.Object
 java.io.IOException
 simpledb.HeapPage
 java.io.RandomAccessFile
-java.lang.Exception
 ||:simpledb.HeapFile
 simpledb.HeapPageId
 simpledb.HeapFile$1

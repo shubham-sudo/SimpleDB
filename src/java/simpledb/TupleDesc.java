@@ -98,7 +98,7 @@ public class TupleDesc implements Serializable {
         this.tItems = new TDItem[typeAr.length];
 
         for (int i = 0; i < typeAr.length; i++) {
-            this.tItems[i] = new TDItem(typeAr[i], "unnamed-" + i);
+            this.tItems[i] = new TDItem(typeAr[i], "");
         }
     }
 

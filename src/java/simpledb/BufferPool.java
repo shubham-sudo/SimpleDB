@@ -20,7 +20,8 @@ public class BufferPool {
     private static final int PAGE_SIZE = 4096;
 
     private static int pageSize = PAGE_SIZE;
-    private static final ConcurrentHashMap<PageId, Page> pages = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<PageId, Page> pages;
+    public final int numPages;
 
     /**
      * Default number of pages passed to the constructor. This is used by
@@ -37,6 +38,8 @@ public class BufferPool {
     public BufferPool(int numPages) {
         // some code goes here
         // pages = new ConcurrentHashMap<>();
+        this.numPages = numPages;
+        pages = new ConcurrentHashMap<>();
     }
 
     public static int getPageSize() {
@@ -75,7 +78,7 @@ public class BufferPool {
             holdsLock(tid, pid);
             return pages.get(pid);
         }
-        if (pages.size() == BufferPool.DEFAULT_PAGES) {
+        if (pages.size() == numPages) {
             throw new DbException("No More Space on Buffer Pool");
         }
         DbFile hf = Database.getCatalog().getDatabaseFile(pid.getTableId());
