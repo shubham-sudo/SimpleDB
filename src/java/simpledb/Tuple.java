@@ -13,9 +13,9 @@ public class Tuple implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private final TupleDesc tupleDesc;
+    private TupleDesc tupleDesc;
     private RecordId recordId;
-    private final Field[] fields;
+    private Field[] fields;
 
     /**
      * Create a new tuple with the specified schema (type).
@@ -126,5 +126,14 @@ public class Tuple implements Serializable {
      */
     public void resetTupleDesc(TupleDesc td) {
         // some code goes here
+        int min = Math.min(this.tupleDesc.numFields(), td.numFields());
+        Field[] newFields = new Field[td.numFields()];
+
+        for (int i = 0; i < min; i++) {
+            newFields[i] = this.fields[i];
+        }
+
+        this.tupleDesc = td;
+        this.fields = newFields;
     }
 }

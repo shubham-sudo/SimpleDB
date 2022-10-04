@@ -1,4 +1,6 @@
-#
+# Questions for lab/Piaaza
+
+- What should happen when a tuples tupleDesc is reset. Do we need to reset the fields to empty array because this could be something like a update table columns kind of process. If thats the case then we might need to add all the previous fields into new fields.
 
 ## **CS 660 Fall-2022 (Programming Assignment #1)**
 
@@ -13,6 +15,8 @@ _**Email**_ - kaushiks@bu.edu
 ### **Write Up**
 
 1. Describe any design decisions you made. These may be minimal for pa1
+
+    - I assumed that `resetTupleDesc` method is something for update/drop column of table and because of that I am creating a new `Field[]` array with new length and all the previous fields are also copied to this new field array. _**Note**_ - copying only happens for `min(oldTupleDesc.numFields(), newTupleDesc.numFields())`.
 
 2. Discuss and justify any changes you made to the API
 
