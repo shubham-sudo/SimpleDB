@@ -2,8 +2,6 @@
 
 ## **CS 660 Fall-2022 (Programming Assignment #1)**
 
----
-
 ### **Student Details**
 
 _**Name**_ - Shubham Kaushik
