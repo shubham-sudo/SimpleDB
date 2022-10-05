@@ -12,7 +12,7 @@ _**Email**_ - kaushiks@bu.edu
 
 1. Describe any design decisions you made. These may be minimal for pa1
 
-    - I assumed that `resetTupleDesc` method is something for update/drop column of table so, because of that I am creating a new `Field[]` array with new length and all the previous fields are also copied to this new field array. _**Note**_ - copying only happens for `min(oldTupleDesc.numFields(), newTupleDesc.numFields())`.
+    - Use of `ConcurrentHashMap` for defining private variable in `class Catalog` to make it thread safe.
     - Defined variable `pages` in `class BufferPool` using `ConcurrentHashMap` for thread safety.
 
 2. Discuss and justify any changes you made to the API

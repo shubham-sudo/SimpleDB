@@ -126,14 +126,6 @@ public class Tuple implements Serializable {
      */
     public void resetTupleDesc(TupleDesc td) {
         // some code goes here
-        int min = Math.min(this.tupleDesc.numFields(), td.numFields());
-        Field[] newFields = new Field[td.numFields()];
-
-        for (int i = 0; i < min; i++) {
-            newFields[i] = this.fields[i];
-        }
-
         this.tupleDesc = td;
-        this.fields = newFields;
     }
 }
