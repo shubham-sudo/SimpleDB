@@ -84,7 +84,6 @@ public class HeapPage implements Page {
      *         tuple occupying tupleSize bytes
      */
     private int getHeaderSize() {
-
         // some code goes here
         return (int) Math.ceil((getNumTuples() / 8.0));
 

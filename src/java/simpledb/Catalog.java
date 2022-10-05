@@ -18,10 +18,10 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class Catalog {
 
-    private ConcurrentHashMap<String, Integer> tableNameHashMap;
-    private ConcurrentHashMap<Integer, String> fileIdHashMap;
-    private ConcurrentHashMap<Integer, DbFile> dbFileHashMap;
-    private ConcurrentHashMap<Integer, String> pKeyFieldHashMap;
+    private ConcurrentHashMap<String, Integer> tableNameFileIdMap;
+    private ConcurrentHashMap<Integer, String> fileIdTableNameMap;
+    private ConcurrentHashMap<Integer, DbFile> fileIdDbFileMap;
+    private ConcurrentHashMap<Integer, String> fileIdPKeyFieldMap;
 
     /**
      * Constructor.
@@ -29,10 +29,10 @@ public class Catalog {
      */
     public Catalog() {
         // some code goes here
-        tableNameHashMap = new ConcurrentHashMap<>();
-        fileIdHashMap = new ConcurrentHashMap<>();
-        dbFileHashMap = new ConcurrentHashMap<>();
-        pKeyFieldHashMap = new ConcurrentHashMap<>();
+        tableNameFileIdMap = new ConcurrentHashMap<>();
+        fileIdTableNameMap = new ConcurrentHashMap<>();
+        fileIdDbFileMap = new ConcurrentHashMap<>();
+        fileIdPKeyFieldMap = new ConcurrentHashMap<>();
     }
 
     /**
@@ -51,10 +51,19 @@ public class Catalog {
      */
     public void addTable(DbFile file, String name, String pkeyField) {
         // some code goes here
-        tableNameHashMap.put(name, file.getId());
-        fileIdHashMap.put(file.getId(), name);
-        dbFileHashMap.put(file.getId(), file);
-        pKeyFieldHashMap.put(file.getId(), pkeyField);
+        if (name == null || pkeyField == null) {
+            throw new IllegalArgumentException("Name can not be null");
+        }
+
+        if (tableNameFileIdMap.containsKey(name)) {
+            fileIdTableNameMap.remove(tableNameFileIdMap.get(name));
+            tableNameFileIdMap.remove(name);
+        }
+
+        tableNameFileIdMap.put(name, file.getId());
+        fileIdTableNameMap.put(file.getId(), name);
+        fileIdDbFileMap.put(file.getId(), file);
+        fileIdPKeyFieldMap.put(file.getId(), pkeyField);
     }
 
     public void addTable(DbFile file, String name) {
@@ -81,8 +90,8 @@ public class Catalog {
      */
     public int getTableId(String name) throws NoSuchElementException {
         // some code goes here
-        if (name != null && tableNameHashMap.containsKey(name)) {
-            return tableNameHashMap.get(name);
+        if (name != null && tableNameFileIdMap.containsKey(name)) {
+            return tableNameFileIdMap.get(name);
         }
         throw new NoSuchElementException("No Such Element Found");
     }
@@ -96,10 +105,10 @@ public class Catalog {
      */
     public TupleDesc getTupleDesc(int tableid) throws NoSuchElementException {
         // some code goes here
-        if (!dbFileHashMap.containsKey(tableid)) {
+        if (!fileIdDbFileMap.containsKey(tableid)) {
             throw new NoSuchElementException("No Such Element Found");
         }
-        return dbFileHashMap.get(tableid).getTupleDesc();
+        return fileIdDbFileMap.get(tableid).getTupleDesc();
     }
 
     /**
@@ -111,33 +120,34 @@ public class Catalog {
      */
     public DbFile getDatabaseFile(int tableid) throws NoSuchElementException {
         // some code goes here
-        if (!dbFileHashMap.containsKey(tableid)) {
+        if (!fileIdDbFileMap.containsKey(tableid)) {
             throw new NoSuchElementException("No Such Element Found");
         }
-        return dbFileHashMap.get(tableid);
+        return fileIdDbFileMap.get(tableid);
     }
 
     public String getPrimaryKey(int tableid) {
         // some code goes here
-        return pKeyFieldHashMap.get(tableid);
+        return fileIdPKeyFieldMap.get(tableid);
     }
 
     public Iterator<Integer> tableIdIterator() {
         // some code goes here
-        return dbFileHashMap.keySet().iterator();
+        return fileIdDbFileMap.keySet().iterator();
     }
 
     public String getTableName(int id) {
         // some code goes here
-        return fileIdHashMap.get(id);
+        return fileIdTableNameMap.get(id);
     }
 
     /** Delete all tables from the catalog */
     public void clear() {
         // some code goes here
-        tableNameHashMap.clear();
-        dbFileHashMap.clear();
-        pKeyFieldHashMap.clear();
+        tableNameFileIdMap.clear();
+        fileIdDbFileMap.clear();
+        fileIdPKeyFieldMap.clear();
+        fileIdTableNameMap.clear();
     }
 
     /**

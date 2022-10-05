@@ -37,9 +37,8 @@ public class BufferPool {
      */
     public BufferPool(int numPages) {
         // some code goes here
-        // pages = new ConcurrentHashMap<>();
         this.numPages = numPages;
-        pages = new ConcurrentHashMap<>();
+        pages = new ConcurrentHashMap<>(this.numPages);
     }
 
     public static int getPageSize() {
@@ -75,10 +74,9 @@ public class BufferPool {
             throws TransactionAbortedException, DbException {
         // some code goes here
         if (pages.containsKey(pid)) {
-            holdsLock(tid, pid);
             return pages.get(pid);
         }
-        if (pages.size() == numPages) {
+        if (pages.size() == numPages) { // throwing exception until eviction is defined
             throw new DbException("No More Space on Buffer Pool");
         }
         DbFile hf = Database.getCatalog().getDatabaseFile(pid.getTableId());

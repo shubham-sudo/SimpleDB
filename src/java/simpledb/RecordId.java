@@ -52,12 +52,10 @@ public class RecordId implements Serializable {
     @Override
     public boolean equals(Object o) {
         // some code goes here
-        if (!(o instanceof RecordId) || ((RecordId) o).tupleno() != this.tupleno()
-                || !((RecordId) o).getPageId().equals(this.getPageId())) {
+        if (!(o instanceof RecordId) || ((RecordId) o).hashCode() != this.hashCode()) {
             return false;
         }
         return true;
-        // throw new UnsupportedOperationException("implement this");
     }
 
     /**
@@ -69,8 +67,7 @@ public class RecordId implements Serializable {
     @Override
     public int hashCode() {
         // some code goes here
-        return this.tupleno(); // THIS has to be fixed properly
-        // throw new UnsupportedOperationException("implement this");
+        return this.pageId.hashCode() + this.tupleno();
 
     }
 
