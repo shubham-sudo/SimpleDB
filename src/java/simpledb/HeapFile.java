@@ -68,7 +68,9 @@ public class HeapFile implements DbFile {
 
     // see DbFile.java for javadocs
     public Page readPage(PageId pid) {
-        // some code goes here
+        // This method does the job of reading a page from the disk
+        // the use of RandomAccessFile is to randomly access the file
+        // from any location using seek and return the next page
         byte[] data = new byte[BufferPool.getPageSize()];
         Page page = null;
         int startAddress = (BufferPool.getPageSize() * pid.pageNumber());
@@ -124,15 +126,19 @@ public class HeapFile implements DbFile {
 
     // see DbFile.java for javadocs
     public DbFileIterator iterator(TransactionId tid) {
-        // some code goes here
+        // Iterator which helps to iterate over the tuples of a heap file
+        // the idea to implement this is: use the iterator of the page
+        // to iterate over the tuples stored on it and whenever the iterator
+        // finishes the iteration of one page, assign the iterator of
+        // next page from the heap file if exists.
         DbFileIterator it = new DbFileIterator() {
             int currentPage = 0;
-            Iterator<Tuple> tIterator;
+            Iterator<Tuple> tuplesIterator;
 
             @Override
             public void open() throws DbException, TransactionAbortedException {
                 HeapPageId pid = new HeapPageId(getId(), currentPage);
-                tIterator = getTuplesIterator(pid);
+                tuplesIterator = getTuplesIterator(pid);
             }
 
             private Iterator<Tuple> getTuplesIterator(HeapPageId pid) throws TransactionAbortedException, DbException {
@@ -142,16 +148,16 @@ public class HeapFile implements DbFile {
 
             @Override
             public boolean hasNext() throws DbException, TransactionAbortedException {
-                if (tIterator == null) {
+                if (tuplesIterator == null) {
                     return false;
-                } else if (tIterator.hasNext()) {
+                } else if (tuplesIterator.hasNext()) {
                     return true;
                 }
                 if (currentPage < numPages() - 1) {
                     currentPage++;
                     HeapPageId pid = new HeapPageId(getId(), currentPage);
-                    tIterator = getTuplesIterator(pid);
-                    return tIterator.hasNext();
+                    tuplesIterator = getTuplesIterator(pid);
+                    return tuplesIterator.hasNext();
                 } else {
                     return false;
                 }
@@ -162,7 +168,7 @@ public class HeapFile implements DbFile {
                 if (!hasNext()) {
                     throw new NoSuchElementException("No Such Element Found");
                 }
-                return tIterator.next();
+                return tuplesIterator.next();
             }
 
             @Override
@@ -174,7 +180,7 @@ public class HeapFile implements DbFile {
             @Override
             public void close() {
                 currentPage = 0;
-                tIterator = null;
+                tuplesIterator = null;
             }
 
         };

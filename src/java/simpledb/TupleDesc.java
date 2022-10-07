@@ -192,7 +192,7 @@ public class TupleDesc implements Serializable {
      * @return the new TupleDesc
      */
     public static TupleDesc merge(TupleDesc td1, TupleDesc td2) {
-        // some code goes here
+        // basically merging two tuple desc is done by creating new TupleDesc
         Type[] newtypeAr = new Type[td1.numFields() + td2.numFields()];
         String[] newfieldAr = new String[td1.numFields() + td2.numFields()];
         int i = 0;

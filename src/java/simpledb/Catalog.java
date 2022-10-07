@@ -18,6 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class Catalog {
 
+    // Using conncurrent hashmap as it is threadsafe
     private ConcurrentHashMap<String, Integer> tableNameFileIdMap;
     private ConcurrentHashMap<Integer, String> fileIdTableNameMap;
     private ConcurrentHashMap<Integer, DbFile> fileIdDbFileMap;
@@ -55,6 +56,8 @@ public class Catalog {
             throw new IllegalArgumentException("Name can not be null");
         }
 
+        // If the same name already exists in the tableNameFileIdMap
+        // Just remove it and add the new name and given DbFile
         if (tableNameFileIdMap.containsKey(name)) {
             fileIdTableNameMap.remove(tableNameFileIdMap.get(name));
             tableNameFileIdMap.remove(name);

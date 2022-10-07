@@ -72,7 +72,9 @@ public class BufferPool {
      */
     public Page getPage(TransactionId tid, PageId pid, Permissions perm)
             throws TransactionAbortedException, DbException {
-        // some code goes here
+        // this function does the main job for caching heap pages
+        // into the buffer and if requested page does not exists
+        // in buffer then it reads that page from heapfile using pageId.
         if (pages.containsKey(pid)) {
             return pages.get(pid);
         }
