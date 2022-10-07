@@ -71,7 +71,7 @@ public class HeapPage implements Page {
      * @return the number of tuples on this page
      */
     private int getNumTuples() {
-        // some code goes here
+        // Just did the divison between BufferPool bits with one tuple size (bits)
         int numTuples = (BufferPool.getPageSize() * 8) / ((td.getSize() * 8) + 1);
         return numTuples;
     }
@@ -84,7 +84,8 @@ public class HeapPage implements Page {
      *         tuple occupying tupleSize bytes
      */
     private int getHeaderSize() {
-        // some code goes here
+        // Since every tuple has one bit in header we have to divide the
+        // # of Tuples with 8
         return (int) Math.ceil((getNumTuples() / 8.0));
 
     }
