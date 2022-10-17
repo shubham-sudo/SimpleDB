@@ -1,7 +1,7 @@
 package simpledb;
 
 import java.io.*;
-
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -20,7 +20,9 @@ public class BufferPool {
     private static final int PAGE_SIZE = 4096;
 
     private static int pageSize = PAGE_SIZE;
-    private final ConcurrentHashMap<PageId, Page> pages;
+    private final LeastRecentlyUsedCache<PageId, Page> pages;
+    private final HashMap<PageId, TransactionId> readWriteLock;
+    private final HashMap<PageId, Set<TransactionId>> readLock;
     public final int numPages;
 
     /**
@@ -38,7 +40,9 @@ public class BufferPool {
     public BufferPool(int numPages) {
         // some code goes here
         this.numPages = numPages;
-        pages = new ConcurrentHashMap<>(this.numPages);
+        readLock = new HashMap<>();
+        readWriteLock = new HashMap<>();
+        pages = new LeastRecentlyUsedCache<>(this.numPages);
     }
 
     public static int getPageSize() {
@@ -75,16 +79,38 @@ public class BufferPool {
         // this function does the main job for caching heap pages
         // into the buffer and if requested page does not exists
         // in buffer then it reads that page from heapfile using pageId.
+
+        Page page = null;
         if (pages.containsKey(pid)) {
-            return pages.get(pid);
+            if (perm.equals(Permissions.READ_ONLY) && !readWriteLock.containsKey(pid)) {
+                if (!readLock.containsKey(pid)) {
+                    readLock.put(pid, new HashSet<>());
+                }
+                readLock.get(pid).add(tid);
+                return pages.get(pid);
+            } else if (perm.equals(Permissions.READ_WRITE) && !readWriteLock.containsKey(pid)
+                    && !readLock.containsKey(pid)) {
+                readWriteLock.put(pid, tid);
+                return pages.get(pid);
+            }
+        } else if (pages.size() <= numPages) {
+            if (pages.size() == numPages) {
+                evictPage();
+            }
+            DbFile hf = Database.getCatalog().getDatabaseFile(pid.getTableId());
+            page = hf.readPage(pid);
+            pages.put(pid, page);
+            if (perm.equals(Permissions.READ_ONLY)) {
+                if (!readLock.containsKey(pid)) {
+                    readLock.put(pid, new HashSet<>());
+                }
+                readLock.get(pid).add(tid);
+            } else if (perm.equals(Permissions.READ_WRITE)) {
+                readWriteLock.put(pid, tid);
+            }
+            return page;
         }
-        if (pages.size() == numPages) { // throwing exception until eviction is defined
-            throw new DbException("No More Space on Buffer Pool");
-        }
-        DbFile hf = Database.getCatalog().getDatabaseFile(pid.getTableId());
-        Page page = hf.readPage(pid);
-        pages.put(pid, page);
-        return page;
+        throw new TransactionAbortedException();
     }
 
     /**
@@ -221,6 +247,17 @@ public class BufferPool {
     private synchronized void evictPage() throws DbException {
         // some code goes here
         // not necessary for lab1
+        try {
+            Page page = pages.evict();
+            if (page == null)
+                throw new DbException("Non-dirty page not found.");
+            if (page.isDirty() != null)
+                flushPage(page.getId());
+            readWriteLock.remove(page.getId());
+            readLock.remove(page.getId());
+        } catch (IOException e) {
+            throw new DbException(e.getMessage());
+        }
     }
 
 }
