@@ -49,7 +49,10 @@ public class IndexPredicate implements Serializable {
      */
     public boolean equals(IndexPredicate ipd) {
         // some code goes here
-        return ipd.getField().compare(op, this.getField());
+        if (ipd == null) {
+            return false;
+        }
+        return op.equals(ipd.op) && fieldValue.equals(ipd.fieldValue);
     }
 
 }

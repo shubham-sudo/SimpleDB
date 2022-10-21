@@ -2,7 +2,6 @@ package simpledb;
 
 import java.io.*;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * BufferPool manages the reading and writing of pages into memory from
@@ -20,9 +19,8 @@ public class BufferPool {
     private static final int PAGE_SIZE = 4096;
 
     private static int pageSize = PAGE_SIZE;
-    private final LeastRecentlyUsedCache<PageId, Page> pages;
-    private final HashMap<PageId, TransactionId> readWriteLock;
-    private final HashMap<PageId, Set<TransactionId>> readLock;
+    private final Deque<PageId> fifoQueue;
+    private final HashMap<PageId, Page> pages;
     public final int numPages;
 
     /**
@@ -40,9 +38,8 @@ public class BufferPool {
     public BufferPool(int numPages) {
         // some code goes here
         this.numPages = numPages;
-        readLock = new HashMap<>();
-        readWriteLock = new HashMap<>();
-        pages = new LeastRecentlyUsedCache<>(this.numPages);
+        pages = new HashMap<>(this.numPages);
+        fifoQueue = new LinkedList<>();
     }
 
     public static int getPageSize() {
@@ -81,36 +78,20 @@ public class BufferPool {
         // in buffer then it reads that page from heapfile using pageId.
 
         Page page = null;
-        if (pages.containsKey(pid)) {
-            if (perm.equals(Permissions.READ_ONLY) && !readWriteLock.containsKey(pid)) {
-                if (!readLock.containsKey(pid)) {
-                    readLock.put(pid, new HashSet<>());
+        synchronized (this) {
+            if (pages.containsKey(pid)) {
+                page = pages.get(pid);
+            } else {
+                if (pages.size() == this.numPages) {
+                    evictPage();
                 }
-                readLock.get(pid).add(tid);
-                return pages.get(pid);
-            } else if (perm.equals(Permissions.READ_WRITE) && !readWriteLock.containsKey(pid)
-                    && !readLock.containsKey(pid)) {
-                readWriteLock.put(pid, tid);
-                return pages.get(pid);
+                DbFile hf = Database.getCatalog().getDatabaseFile(pid.getTableId());
+                page = hf.readPage(pid);
+                pages.put(pid, page);
+                fifoQueue.add(pid);
             }
-        } else if (pages.size() <= numPages) {
-            if (pages.size() == numPages) {
-                evictPage();
-            }
-            DbFile hf = Database.getCatalog().getDatabaseFile(pid.getTableId());
-            page = hf.readPage(pid);
-            pages.put(pid, page);
-            if (perm.equals(Permissions.READ_ONLY)) {
-                if (!readLock.containsKey(pid)) {
-                    readLock.put(pid, new HashSet<>());
-                }
-                readLock.get(pid).add(tid);
-            } else if (perm.equals(Permissions.READ_WRITE)) {
-                readWriteLock.put(pid, tid);
-            }
-            return page;
         }
-        throw new TransactionAbortedException();
+        return page;
     }
 
     /**
@@ -176,6 +157,13 @@ public class BufferPool {
             throws DbException, IOException, TransactionAbortedException {
         // some code goes here
         // not necessary for lab1
+        ArrayList<Page> pagesToMarkDirty = Database.getCatalog().getDatabaseFile(tableId).insertTuple(tid, t);
+        Iterator<Page> iter = pagesToMarkDirty.iterator();
+        while (iter.hasNext()) {
+            Page page = iter.next();
+            page.markDirty(true, tid);
+            pages.put(page.getId(), page);
+        }
     }
 
     /**
@@ -205,7 +193,10 @@ public class BufferPool {
     public synchronized void flushAllPages() throws IOException {
         // some code goes here
         // not necessary for lab1
-
+        for (Map.Entry<PageId, Page> entry : pages.entrySet()) {
+            PageId pageId = entry.getKey();
+            flushPage(pageId);
+        }
     }
 
     /**
@@ -238,6 +229,13 @@ public class BufferPool {
     public synchronized void flushPages(TransactionId tid) throws IOException {
         // some code goes here
         // not necessary for lab1|lab2
+        for (Map.Entry<PageId, Page> entry : pages.entrySet()) {
+            Page page = entry.getValue();
+            PageId pageId = entry.getKey();
+            if (page.isDirty() != null) {
+                flushPage(pageId);
+            }
+        }
     }
 
     /**
@@ -248,13 +246,13 @@ public class BufferPool {
         // some code goes here
         // not necessary for lab1
         try {
-            Page page = pages.evict();
-            if (page == null)
-                throw new DbException("Non-dirty page not found.");
-            if (page.isDirty() != null)
-                flushPage(page.getId());
-            readWriteLock.remove(page.getId());
-            readLock.remove(page.getId());
+            if (!fifoQueue.isEmpty()) {
+                PageId pid = fifoQueue.pop();
+                if (pages.get(pid).isDirty() != null) {
+                    flushPage(pid);
+                }
+                pages.remove(pid);
+            }
         } catch (IOException e) {
             throw new DbException(e.getMessage());
         }
