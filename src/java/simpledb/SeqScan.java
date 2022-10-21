@@ -20,12 +20,9 @@ public class SeqScan implements DbIterator {
      * Creates a sequential scan over the specified table as a part of the
      * specified transaction.
      *
-     * @param tid
-     *                   The transaction this scan is running as a part of.
-     * @param tableid
-     *                   the table to scan.
-     * @param tableAlias
-     *                   the alias of this table (needed by the parser); the
+     * @param tid        The transaction this scan is running as a part of.
+     * @param tableid    the table to scan.
+     * @param tableAlias the alias of this table (needed by the parser); the
      *                   returned
      *                   tupleDesc should have fields with name tableAlias.fieldName
      *                   (note: this class is not responsible for handling a case
@@ -43,10 +40,13 @@ public class SeqScan implements DbIterator {
         this.tableName = Database.getCatalog().getTableName(tableid);
     }
 
+    public SeqScan(TransactionId tid, int tableid) {
+        this(tid, tableid, Database.getCatalog().getTableName(tableid));
+    }
+
     /**
-     * @return
-     *         return the table name of the table the operator scans. This should
-     *         be the actual name of the table in the catalog of the database
+     * @return return the table name of the table the operator scans. This should
+     * be the actual name of the table in the catalog of the database
      */
     public String getTableName() {
         return this.tableName;
@@ -62,11 +62,9 @@ public class SeqScan implements DbIterator {
 
     /**
      * Reset the tableid, and tableAlias of this operator.
-     * 
-     * @param tableid
-     *                   the table to scan.
-     * @param tableAlias
-     *                   the alias of this table (needed by the parser); the
+     *
+     * @param tableid    the table to scan.
+     * @param tableAlias the alias of this table (needed by the parser); the
      *                   returned
      *                   tupleDesc should have fields with name tableAlias.fieldName
      *                   (note: this class is not responsible for handling a case
@@ -80,10 +78,6 @@ public class SeqScan implements DbIterator {
         // some code goes here
         this.tableId = tableid;
         this.tableAlias = tableAlias;
-    }
-
-    public SeqScan(TransactionId tid, int tableid) {
-        this(tid, tableid, Database.getCatalog().getTableName(tableid));
     }
 
     public void open() throws DbException, TransactionAbortedException {
@@ -100,7 +94,7 @@ public class SeqScan implements DbIterator {
      * (e.g., "alias.fieldName").
      *
      * @return the TupleDesc with field names from the underlying HeapFile,
-     *         prefixed with the tableAlias string from the constructor.
+     * prefixed with the tableAlias string from the constructor.
      */
     public TupleDesc getTupleDesc() {
         // some code goes here

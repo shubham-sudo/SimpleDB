@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * For now, this is a stub catalog that must be populated with tables by a
  * user program before it can be used -- eventually, this should be converted
  * to a catalog that reads a catalog table from disk.
- * 
+ *
  * @Threadsafe
  */
 public class Catalog {
@@ -39,7 +39,7 @@ public class Catalog {
     /**
      * Add a new table to the catalog.
      * This table's contents are stored in the specified DbFile.
-     * 
+     *
      * @param file      the contents of the table to add; file.getId() is the
      *                  identfier of
      *                  this file/tupledesc param for the calls getTupleDesc and
@@ -77,7 +77,7 @@ public class Catalog {
      * Add a new table to the catalog.
      * This table has tuples formatted using the specified TupleDesc and its
      * contents are stored in the specified DbFile.
-     * 
+     *
      * @param file the contents of the table to add; file.getId() is the identfier
      *             of
      *             this file/tupledesc param for the calls getTupleDesc and getFile
@@ -88,7 +88,7 @@ public class Catalog {
 
     /**
      * Return the id of the table with a specified name,
-     * 
+     *
      * @throws NoSuchElementException if the table doesn't exist
      */
     public int getTableId(String name) throws NoSuchElementException {
@@ -101,7 +101,7 @@ public class Catalog {
 
     /**
      * Returns the tuple descriptor (schema) of the specified table
-     * 
+     *
      * @param tableid The id of the table, as specified by the DbFile.getId()
      *                function passed to addTable
      * @throws NoSuchElementException if the table doesn't exist
@@ -117,7 +117,7 @@ public class Catalog {
     /**
      * Returns the DbFile that can be used to read the contents of the
      * specified table.
-     * 
+     *
      * @param tableid The id of the table, as specified by the DbFile.getId()
      *                function passed to addTable
      */
@@ -144,7 +144,9 @@ public class Catalog {
         return fileIdTableNameMap.get(id);
     }
 
-    /** Delete all tables from the catalog */
+    /**
+     * Delete all tables from the catalog
+     */
     public void clear() {
         // some code goes here
         tableNameFileIdMap.clear();
@@ -156,7 +158,7 @@ public class Catalog {
     /**
      * Reads the schema from a file and creates the appropriate tables in the
      * database.
-     * 
+     *
      * @param catalogFile
      */
     public void loadSchema(String catalogFile) {

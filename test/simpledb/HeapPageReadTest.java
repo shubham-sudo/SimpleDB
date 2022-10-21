@@ -10,38 +10,38 @@ import java.util.*;
 
 import org.junit.Before;
 import org.junit.Test;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+
 import junit.framework.JUnit4TestAdapter;
 
 public class HeapPageReadTest extends SimpleDbTestBase {
-    private HeapPageId pid;
-
-    public static final int[][] EXAMPLE_VALUES = new int[][] {
-        { 31933, 862 },
-        { 29402, 56883 },
-        { 1468, 5825 },
-        { 17876, 52278 },
-        { 6350, 36090 },
-        { 34784, 43771 },
-        { 28617, 56874 },
-        { 19209, 23253 },
-        { 56462, 24979 },
-        { 51440, 56685 },
-        { 3596, 62307 },
-        { 45569, 2719 },
-        { 22064, 43575 },
-        { 42812, 44947 },
-        { 22189, 19724 },
-        { 33549, 36554 },
-        { 9086, 53184 },
-        { 42878, 33394 },
-        { 62778, 21122 },
-        { 17197, 16388 }
+    public static final int[][] EXAMPLE_VALUES = new int[][]{
+            {31933, 862},
+            {29402, 56883},
+            {1468, 5825},
+            {17876, 52278},
+            {6350, 36090},
+            {34784, 43771},
+            {28617, 56874},
+            {19209, 23253},
+            {56462, 24979},
+            {51440, 56685},
+            {3596, 62307},
+            {45569, 2719},
+            {22064, 43575},
+            {42812, 44947},
+            {22189, 19724},
+            {33549, 36554},
+            {9086, 53184},
+            {42878, 33394},
+            {62778, 21122},
+            {17197, 16388}
     };
-
     public static final byte[] EXAMPLE_DATA;
+
     static {
         // Build the input table
         ArrayList<ArrayList<Integer>> table = new ArrayList<ArrayList<Integer>>();
@@ -64,10 +64,20 @@ public class HeapPageReadTest extends SimpleDbTestBase {
         }
     }
 
+    private HeapPageId pid;
+
+    /**
+     * JUnit suite target
+     */
+    public static junit.framework.Test suite() {
+        return new JUnit4TestAdapter(HeapPageReadTest.class);
+    }
+
     /**
      * Set up initial resources for each unit test.
      */
-    @Before public void addTable() throws Exception {
+    @Before
+    public void addTable() throws Exception {
         this.pid = new HeapPageId(-1, -1);
         Database.getCatalog().addTable(new SkeletonFile(-1, Utility.getTupleDesc(2)), SystemTestUtil.getUUID());
     }
@@ -75,7 +85,8 @@ public class HeapPageReadTest extends SimpleDbTestBase {
     /**
      * Unit test for HeapPage.getId()
      */
-    @Test public void getId() throws Exception {
+    @Test
+    public void getId() throws Exception {
         HeapPage page = new HeapPage(pid, EXAMPLE_DATA);
         assertEquals(pid, page.getId());
     }
@@ -83,7 +94,8 @@ public class HeapPageReadTest extends SimpleDbTestBase {
     /**
      * Unit test for HeapPage.iterator()
      */
-    @Test public void testIterator() throws Exception {
+    @Test
+    public void testIterator() throws Exception {
         HeapPage page = new HeapPage(pid, EXAMPLE_DATA);
         Iterator<Tuple> it = page.iterator();
 
@@ -102,7 +114,8 @@ public class HeapPageReadTest extends SimpleDbTestBase {
     /**
      * Unit test for HeapPage.getNumEmptySlots()
      */
-    @Test public void getNumEmptySlots() throws Exception {
+    @Test
+    public void getNumEmptySlots() throws Exception {
         HeapPage page = new HeapPage(pid, EXAMPLE_DATA);
         assertEquals(484, page.getNumEmptySlots());
     }
@@ -110,7 +123,8 @@ public class HeapPageReadTest extends SimpleDbTestBase {
     /**
      * Unit test for HeapPage.isSlotUsed()
      */
-    @Test public void getSlot() throws Exception {
+    @Test
+    public void getSlot() throws Exception {
         HeapPage page = new HeapPage(pid, EXAMPLE_DATA);
 
         for (int i = 0; i < 20; ++i)
@@ -118,12 +132,5 @@ public class HeapPageReadTest extends SimpleDbTestBase {
 
         for (int i = 20; i < 504; ++i)
             assertFalse(page.isSlotUsed(i));
-    }
-
-    /**
-     * JUnit suite target
-     */
-    public static junit.framework.Test suite() {
-        return new JUnit4TestAdapter(HeapPageReadTest.class);
     }
 }

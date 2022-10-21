@@ -1,4 +1,3 @@
-
 package simpledb;
 
 import java.util.*;
@@ -24,7 +23,6 @@ public interface DbFile {
      *
      * @param p The page to write.  page.getId().pageno() specifies the offset into the file where the page should be written.
      * @throws IOException if the write fails
-     *
      */
     public void writePage(Page p) throws IOException;
 
@@ -34,30 +32,29 @@ public interface DbFile {
      * may block until the lock can be acquired.
      *
      * @param tid The transaction performing the update
-     * @param t The tuple to add.  This tuple should be updated to reflect that
-     *          it is now stored in this file.
+     * @param t   The tuple to add.  This tuple should be updated to reflect that
+     *            it is now stored in this file.
      * @return An ArrayList contain the pages that were modified
      * @throws DbException if the tuple cannot be added
      * @throws IOException if the needed file can't be read/written
      */
     public ArrayList<Page> insertTuple(TransactionId tid, Tuple t)
-        throws DbException, IOException, TransactionAbortedException;
+            throws DbException, IOException, TransactionAbortedException;
 
     /**
-     * Removes the specified tuple from the file on behalf of the specified
-     * transaction.
+     * Removes the specified tuple from the file on behalf of the specified transaction.
      * This method will acquire a lock on the affected pages of the file, and
      * may block until the lock can be acquired.
      *
      * @param tid The transaction performing the update
-     * @param t The tuple to delete.  This tuple should be updated to reflect that
-     *          it is no longer stored on any page.
+     * @param t   The tuple to delete.  This tuple should be updated to reflect that
+     *            it is no longer stored on any page.
      * @return An ArrayList contain the pages that were modified
      * @throws DbException if the tuple cannot be deleted or is not a member
-     *   of the file
+     *                     of the file
      */
     public ArrayList<Page> deleteTuple(TransactionId tid, Tuple t)
-        throws DbException, IOException, TransactionAbortedException;
+            throws DbException, IOException, TransactionAbortedException;
 
     /**
      * Returns an iterator over all the tuples stored in this DbFile. The
@@ -82,9 +79,10 @@ public interface DbFile {
      * @return an ID uniquely identifying this HeapFile.
      */
     public int getId();
-    
+
     /**
      * Returns the TupleDesc of the table stored in this DbFile.
+     *
      * @return TupleDesc of this DbFile.
      */
     public TupleDesc getTupleDesc();

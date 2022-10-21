@@ -11,24 +11,24 @@ import java.util.*;
  * The BufferPool is also responsible for locking; when a transaction fetches
  * a page, BufferPool checks that the transaction has the appropriate
  * locks to read/write the page.
- * 
+ *
  * @Threadsafe, all fields are final
  */
 public class BufferPool {
-    /** Bytes per page, including header. */
-    private static final int PAGE_SIZE = 4096;
-
-    private static int pageSize = PAGE_SIZE;
-    private final Deque<PageId> fifoQueue;
-    private final HashMap<PageId, Page> pages;
-    public final int numPages;
-
     /**
      * Default number of pages passed to the constructor. This is used by
      * other classes. BufferPool should use the numPages argument to the
      * constructor instead.
      */
     public static final int DEFAULT_PAGES = 50;
+    /**
+     * Bytes per page, including header.
+     */
+    private static final int PAGE_SIZE = 4096;
+    private static int pageSize = PAGE_SIZE;
+    public final int numPages;
+    private final Deque<PageId> fifoQueue;
+    private final HashMap<PageId, Page> pages;
 
     /**
      * Creates a BufferPool that caches up to numPages pages.
@@ -118,7 +118,9 @@ public class BufferPool {
         // not necessary for lab1|lab2
     }
 
-    /** Return true if the specified transaction has a lock on the specified page */
+    /**
+     * Return true if the specified transaction has a lock on the specified page
+     */
     public boolean holdsLock(TransactionId tid, PageId p) {
         // some code goes here
         // not necessary for lab1|lab2
@@ -143,7 +145,7 @@ public class BufferPool {
      * acquire a write lock on the page the tuple is added to and any other
      * pages that are updated (Lock acquisition is not needed for lab2).
      * May block if the lock(s) cannot be acquired.
-     * 
+     * <p>
      * Marks any pages that were dirtied by the operation as dirty by calling
      * their markDirty bit, and adds versions of any pages that have
      * been dirtied to the cache (replacing any existing versions of those pages) so
@@ -170,7 +172,7 @@ public class BufferPool {
      * Remove the specified tuple from the buffer pool.
      * Will acquire a write lock on the page the tuple is removed from and any
      * other pages that are updated. May block if the lock(s) cannot be acquired.
-     *
+     * <p>
      * Marks any pages that were dirtied by the operation as dirty by calling
      * their markDirty bit, and adds versions of any pages that have
      * been dirtied to the cache (replacing any existing versions of those pages) so
@@ -204,7 +206,7 @@ public class BufferPool {
      * Needed by the recovery manager to ensure that the
      * buffer pool doesn't keep a rolled back page in its
      * cache.
-     * 
+     * <p>
      * Also used by B+ tree files to ensure that deleted pages
      * are removed from the cache so they can be reused safely
      */
@@ -215,7 +217,7 @@ public class BufferPool {
 
     /**
      * Flushes a certain page to disk
-     * 
+     *
      * @param pid an ID indicating the page to flush
      */
     private synchronized void flushPage(PageId pid) throws IOException {

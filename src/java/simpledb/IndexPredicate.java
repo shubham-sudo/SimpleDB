@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 /**
  * IndexPredicate compares a field which has index on it against a given value
- * 
+ *
  * @see simpledb.IndexDbIterator
  */
 public class IndexPredicate implements Serializable {
@@ -44,7 +44,7 @@ public class IndexPredicate implements Serializable {
      * Return true if the fieldvalue in the supplied predicate
      * is satisfied by this predicate's fieldvalue and
      * operator.
-     * 
+     *
      * @param ipd The field to compare against.
      */
     public boolean equals(IndexPredicate ipd) {

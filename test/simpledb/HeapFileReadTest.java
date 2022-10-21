@@ -4,17 +4,26 @@ import simpledb.systemtest.SimpleDbTestBase;
 import simpledb.systemtest.SystemTestUtil;
 
 import java.util.*;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
+
 import junit.framework.JUnit4TestAdapter;
 
 public class HeapFileReadTest extends SimpleDbTestBase {
     private HeapFile hf;
     private TransactionId tid;
     private TupleDesc td;
+
+    /**
+     * JUnit suite target
+     */
+    public static junit.framework.Test suite() {
+        return new JUnit4TestAdapter(HeapFileReadTest.class);
+    }
 
     /**
      * Set up initial resources for each unit test.
@@ -50,9 +59,10 @@ public class HeapFileReadTest extends SimpleDbTestBase {
      * Unit test for HeapFile.getTupleDesc()
      */
     @Test
-    public void getTupleDesc() throws Exception {    	
-        assertEquals(td, hf.getTupleDesc());        
+    public void getTupleDesc() throws Exception {
+        assertEquals(td, hf.getTupleDesc());
     }
+
     /**
      * Unit test for HeapFile.numPages()
      */
@@ -119,12 +129,5 @@ public class HeapFileReadTest extends SimpleDbTestBase {
         }
         // close twice is harmless
         it.close();
-    }
-
-    /**
-     * JUnit suite target
-     */
-    public static junit.framework.Test suite() {
-        return new JUnit4TestAdapter(HeapFileReadTest.class);
     }
 }

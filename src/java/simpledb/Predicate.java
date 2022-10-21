@@ -12,50 +12,12 @@ public class Predicate implements Serializable {
     private Op op;
     private Field fieldValue;
 
-    /** Constants used for return codes in Field.compare */
-    public enum Op implements Serializable {
-        EQUALS, GREATER_THAN, LESS_THAN, LESS_THAN_OR_EQ, GREATER_THAN_OR_EQ, LIKE, NOT_EQUALS;
-
-        /**
-         * Interface to access operations by integer value for command-line
-         * convenience.
-         * 
-         * @param i
-         *          a valid integer Op index
-         */
-        public static Op getOp(int i) {
-            return values()[i];
-        }
-
-        public String toString() {
-            if (this == EQUALS)
-                return "=";
-            if (this == GREATER_THAN)
-                return ">";
-            if (this == LESS_THAN)
-                return "<";
-            if (this == LESS_THAN_OR_EQ)
-                return "<=";
-            if (this == GREATER_THAN_OR_EQ)
-                return ">=";
-            if (this == LIKE)
-                return "LIKE";
-            if (this == NOT_EQUALS)
-                return "<>";
-            throw new IllegalStateException("impossible to reach here");
-        }
-
-    }
-
     /**
      * Constructor.
-     * 
-     * @param field
-     *                field number of passed in tuples to compare against.
-     * @param op
-     *                operation to use for comparison
-     * @param operand
-     *                field value to compare passed in tuples to
+     *
+     * @param field   field number of passed in tuples to compare against.
+     * @param op      operation to use for comparison
+     * @param operand field value to compare passed in tuples to
      */
     public Predicate(int field, Op op, Field operand) {
         // some code goes here
@@ -93,9 +55,8 @@ public class Predicate implements Serializable {
      * operand field specified in the constructor using the operator specific in
      * the constructor. The comparison can be made through Field's compare
      * method.
-     * 
-     * @param t
-     *          The tuple to compare against
+     *
+     * @param t The tuple to compare against
      * @return true if the comparison is true, false otherwise.
      */
     public boolean filter(Tuple t) {
@@ -110,5 +71,41 @@ public class Predicate implements Serializable {
     public String toString() {
         // some code goes here
         return "f = " + this.fieldNumber + "op = " + this.op + "operand = " + this.fieldValue;
+    }
+
+    /**
+     * Constants used for return codes in Field.compare
+     */
+    public enum Op implements Serializable {
+        EQUALS, GREATER_THAN, LESS_THAN, LESS_THAN_OR_EQ, GREATER_THAN_OR_EQ, LIKE, NOT_EQUALS;
+
+        /**
+         * Interface to access operations by integer value for command-line
+         * convenience.
+         *
+         * @param i a valid integer Op index
+         */
+        public static Op getOp(int i) {
+            return values()[i];
+        }
+
+        public String toString() {
+            if (this == EQUALS)
+                return "=";
+            if (this == GREATER_THAN)
+                return ">";
+            if (this == LESS_THAN)
+                return "<";
+            if (this == LESS_THAN_OR_EQ)
+                return "<=";
+            if (this == GREATER_THAN_OR_EQ)
+                return ">=";
+            if (this == LIKE)
+                return "LIKE";
+            if (this == NOT_EQUALS)
+                return "<>";
+            throw new IllegalStateException("impossible to reach here");
+        }
+
     }
 }
