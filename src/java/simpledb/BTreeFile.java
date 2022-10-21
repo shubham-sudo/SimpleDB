@@ -276,10 +276,10 @@ public class BTreeFile implements DbFile {
         // tuple with the given key field should be inserted.
 
         BTreeLeafPage newLeafPage = (BTreeLeafPage) getEmptyPage(tid, dirtypages, BTreePageId.LEAF);
-        BTreePageId rightSiblingId = page.getRightSiblingId(); // need to update this in last
+        BTreePageId rightSiblingId = page.getRightSiblingId();
 
         int numOfTuples = page.getNumTuples();
-        int splitIndex = numOfTuples / 2; // what if numOfTuples is odd number ???
+        int splitIndex = numOfTuples / 2;
 
         Iterator<Tuple> iter = page.reverseIterator();
 
