@@ -210,11 +210,11 @@ public class BTreeFile implements DbFile {
         while (iter != null && iter.hasNext()) {
             lastBTreeEntry = iter.next();
             if (f == null || f.compare(Op.LESS_THAN_OR_EQ, lastBTreeEntry.getKey())) {
-                return findLeafPage(tid, dirtypages, lastBTreeEntry.getLeftChild(), Permissions.READ_ONLY, f);
+                return findLeafPage(tid, dirtypages, lastBTreeEntry.getLeftChild(), perm, f);
             }
         }
 
-        return findLeafPage(tid, dirtypages, lastBTreeEntry.getRightChild(), Permissions.READ_ONLY, f);
+        return findLeafPage(tid, dirtypages, lastBTreeEntry.getRightChild(), perm, f);
     }
 
     /**
@@ -359,8 +359,7 @@ public class BTreeFile implements DbFile {
         BTreeEntry moveUpEntry = iter.next();
         Field moveUpKey = moveUpEntry.getKey();
         page.deleteKeyAndRightChild(moveUpEntry);
-        BTreeInternalPage parentPage = (BTreeInternalPage) (getParentWithEmptySlots(tid, dirtypages, page.getParentId(),
-                moveUpKey));
+        BTreeInternalPage parentPage = (getParentWithEmptySlots(tid, dirtypages, page.getParentId(), moveUpKey));
         moveUpEntry.setLeftChild(page.getId());
         moveUpEntry.setRightChild(newInternalPage.getId());
         parentPage.insertEntry(moveUpEntry);
@@ -684,6 +683,30 @@ public class BTreeFile implements DbFile {
     protected void stealFromLeafPage(BTreeLeafPage page, BTreeLeafPage sibling,
                                      BTreeInternalPage parent, BTreeEntry entry, boolean isRightSibling) throws DbException {
         // some code goes here
+        Iterator<Tuple> iter;
+        Tuple tuple = null;
+
+        if (isRightSibling) {
+            iter = sibling.iterator();
+        } else {
+            iter = sibling.reverseIterator();
+        }
+        int totalTuples = sibling.getNumTuples() + page.getNumTuples();
+        int maxShift = totalTuples/2 - page.getNumTuples();
+
+        while (iter.hasNext() && maxShift > 0){
+            tuple = iter.next();
+            sibling.deleteTuple(tuple);
+            page.insertTuple(tuple);
+            maxShift--;
+        }
+
+        if (isRightSibling) {
+            tuple = iter.next();
+        }
+        Field newParentEntry = tuple.getField(this.keyField());
+        entry.setKey(newParentEntry);
+        parent.updateEntry(entry);
         //
         // Move some of the tuples from the sibling to the page so
         // that the tuples are evenly distributed. Be sure to update
@@ -775,6 +798,28 @@ public class BTreeFile implements DbFile {
                                              BTreeInternalPage page, BTreeInternalPage leftSibling, BTreeInternalPage parent,
                                              BTreeEntry parentEntry) throws DbException, IOException, TransactionAbortedException {
         // some code goes here
+        int totalTuples = leftSibling.getNumEntries() + page.getNumEntries();
+        int maxShift = totalTuples/2 - page.getNumEntries();
+
+        BTreePageId leftChild = leftSibling.reverseIterator().next().getRightChild();
+        BTreePageId rightChild = page.iterator().next().getLeftChild();
+
+        page.insertEntry(new BTreeEntry(parentEntry.getKey(), leftChild, rightChild));
+
+        Iterator<BTreeEntry> iter = leftSibling.reverseIterator();
+        BTreeEntry bTreeEntry;
+        while (maxShift - 1 > 0){
+            bTreeEntry = iter.next();
+            leftSibling.deleteKeyAndRightChild(bTreeEntry);
+            page.insertEntry(bTreeEntry);
+            maxShift--;
+        }
+        bTreeEntry = iter.next();
+        leftSibling.deleteKeyAndRightChild(bTreeEntry);
+        parentEntry.setKey(bTreeEntry.getKey());
+        parent.updateEntry(parentEntry);
+        updateParentPointers(tid, dirtypages, page);
+        updateParentPointers(tid, dirtypages, leftSibling);
     }
 
     /**
@@ -802,6 +847,28 @@ public class BTreeFile implements DbFile {
     protected void stealFromRightInternalPage(TransactionId tid, HashMap<PageId, Page> dirtypages,
                                               BTreeInternalPage page, BTreeInternalPage rightSibling, BTreeInternalPage parent,
                                               BTreeEntry parentEntry) throws DbException, IOException, TransactionAbortedException {
+        int totalTuples = rightSibling.getNumEntries() + page.getNumEntries();
+        int maxShift = totalTuples/2 - page.getNumEntries();
+
+        BTreePageId leftChild = page.reverseIterator().next().getRightChild();
+        BTreePageId rightChild = rightSibling.iterator().next().getLeftChild();
+
+        page.insertEntry(new BTreeEntry(parentEntry.getKey(), leftChild, rightChild));
+
+        Iterator<BTreeEntry> iter = rightSibling.iterator();
+        BTreeEntry bTreeEntry;
+        while (maxShift - 1 > 0){
+            bTreeEntry = iter.next();
+            rightSibling.deleteKeyAndLeftChild(bTreeEntry);
+            page.insertEntry(bTreeEntry);
+            maxShift--;
+        }
+        bTreeEntry = iter.next();
+        rightSibling.deleteKeyAndLeftChild(bTreeEntry);
+        parentEntry.setKey(bTreeEntry.getKey());
+        parent.updateEntry(parentEntry);
+        updateParentPointers(tid, dirtypages, page);
+        updateParentPointers(tid, dirtypages, rightSibling);
         // some code goes here
         // Move some of the entries from the right sibling to the page so
         // that the entries are evenly distributed. Be sure to update
@@ -836,6 +903,20 @@ public class BTreeFile implements DbFile {
                                   BTreeLeafPage leftPage, BTreeLeafPage rightPage, BTreeInternalPage parent, BTreeEntry parentEntry)
             throws DbException, IOException, TransactionAbortedException {
 
+        Iterator<Tuple> iter = rightPage.iterator();
+        Tuple tuple;
+        while (iter.hasNext()){
+            tuple = iter.next();
+            rightPage.deleteTuple(tuple);
+            leftPage.insertTuple(tuple);
+        }
+        if (rightPage.getRightSiblingId() != null){
+            BTreeLeafPage rightSiblingRight = (BTreeLeafPage) getPage(tid, dirtypages, rightPage.getRightSiblingId(), Permissions.READ_ONLY);
+            rightSiblingRight.setLeftSiblingId(leftPage.getId());
+        }
+        leftPage.setRightSiblingId(rightPage.getRightSiblingId());
+        deleteParentEntry(tid, dirtypages, leftPage, parent, parentEntry);
+        setEmptyPage(tid, dirtypages, rightPage.getId().pageNumber());
         // some code goes here
         //
         // Move all the tuples from the right page to the left page, update
@@ -873,7 +954,21 @@ public class BTreeFile implements DbFile {
     protected void mergeInternalPages(TransactionId tid, HashMap<PageId, Page> dirtypages,
                                       BTreeInternalPage leftPage, BTreeInternalPage rightPage, BTreeInternalPage parent, BTreeEntry parentEntry)
             throws DbException, IOException, TransactionAbortedException {
+        BTreePageId leftChild = leftPage.reverseIterator().next().getRightChild();
+        BTreePageId rightChild = rightPage.iterator().next().getLeftChild();
 
+        leftPage.insertEntry(new BTreeEntry(parentEntry.getKey(), leftChild, rightChild));
+        Iterator<BTreeEntry> iter = rightPage.iterator();
+        BTreeEntry bTreeEntry;
+
+        while (iter.hasNext()){
+            bTreeEntry = iter.next();
+            rightPage.deleteKeyAndLeftChild(bTreeEntry);
+            leftPage.insertEntry(bTreeEntry);
+        }
+        deleteParentEntry(tid, dirtypages, leftPage, parent, parentEntry);
+        updateParentPointers(tid, dirtypages, leftPage);
+        setEmptyPage(tid, dirtypages, rightPage.getId().pageNumber());
         // some code goes here
         //
         // Move all the entries from the right page to the left page, update

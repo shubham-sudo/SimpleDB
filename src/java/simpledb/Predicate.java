@@ -8,9 +8,9 @@ import java.io.Serializable;
 public class Predicate implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    private int fieldNumber;
-    private Op op;
-    private Field fieldValue;
+    private final int fieldNumber;
+    private final Op op;
+    private final Field fieldValue;
 
     /**
      * Constructor.

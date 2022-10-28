@@ -10,8 +10,8 @@ import java.io.Serializable;
 public class IndexPredicate implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    private Predicate.Op op;
-    private Field fieldValue;
+    private final Predicate.Op op;
+    private final Field fieldValue;
 
     /**
      * Constructor.
