@@ -1,11 +1,19 @@
 package simpledb;
 
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
 /**
  * Knows how to compute some aggregate over a set of StringFields.
  */
 public class StringAggregator implements Aggregator {
 
     private static final long serialVersionUID = 1L;
+    private final int groupByField;
+    private final Type groupByFieldType;
+    private final int aggregatorField;
+    private final Aggregator.Op aggregatorOp;
+    private final ConcurrentHashMap<Field, Integer> fieldCountMap;
 
     /**
      * Aggregate constructor
@@ -18,6 +26,15 @@ public class StringAggregator implements Aggregator {
 
     public StringAggregator(int gbfield, Type gbfieldtype, int afield, Op what) {
         // some code goes here
+        if (what != Op.COUNT){
+            throw new IllegalArgumentException("Invalid Operation");
+        }
+
+        this.groupByField = gbfield;
+        this.groupByFieldType = gbfieldtype;
+        this.aggregatorField = afield;
+        this.aggregatorOp = what;
+        this.fieldCountMap = new ConcurrentHashMap<>();
     }
 
     /**
@@ -26,6 +43,12 @@ public class StringAggregator implements Aggregator {
      */
     public void mergeTupleIntoGroup(Tuple tup) {
         // some code goes here
+        Field key = tup.getField(this.groupByField);
+
+        if (!this.fieldCountMap.containsKey(key)){
+            this.fieldCountMap.put(key, 0);
+        }
+        this.fieldCountMap.put(key, this.fieldCountMap.get(key) + 1);
     }
 
     /**
@@ -38,7 +61,16 @@ public class StringAggregator implements Aggregator {
      */
     public DbIterator iterator() {
         // some code goes here
-        throw new UnsupportedOperationException("please implement me for lab3");
+        TupleDesc tupleDesc = new TupleDesc(new Type[] {this.groupByFieldType, Type.INT_TYPE});
+        List<Tuple> TupleList = new ArrayList<Tuple>();
+        Enumeration<Field> keys = this.fieldCountMap.keys();
+        while(keys.hasMoreElements()) {
+            Tuple t  = new Tuple(tupleDesc);
+            Field key = keys.nextElement();
+            t.setField(0, key);
+            t.setField(1, new IntField(this.fieldCountMap.get(key)));
+            TupleList.add(t);
+        }
+        return new TupleIterator(tupleDesc, TupleList);
     }
-
 }

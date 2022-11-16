@@ -139,7 +139,8 @@ public class TupleDesc implements Serializable {
      */
     public Type getFieldType(int i) throws NoSuchElementException {
         // some code goes here
-        if (i >= this.tItems.length || this.tItems[i] == null) {
+        if (i < 0 || i >= this.tItems.length || this.tItems[i] == null) {
+            System.out.println("value of i" + i);
             throw new NoSuchElementException("No such element found");
         }
         return this.tItems[i].fieldType;

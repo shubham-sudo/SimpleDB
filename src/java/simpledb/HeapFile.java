@@ -89,6 +89,14 @@ public class HeapFile implements DbFile {
     public void writePage(Page page) throws IOException {
         // some code goes here
         // not necessary for lab1
+        try {
+            raf = new RandomAccessFile(this.file, "rw");
+            raf.seek((long)page.getId().pageNumber()*BufferPool.getPageSize());
+            raf.write(page.getPageData(), 0, BufferPool.getPageSize());
+            raf.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -111,7 +119,22 @@ public class HeapFile implements DbFile {
     public ArrayList<Page> insertTuple(TransactionId tid, Tuple t)
             throws DbException, IOException, TransactionAbortedException {
         // some code goes here
-        return null;
+        HeapPage page = null;
+        int pageNo = 0;
+        while(pageNo < this.numPages()) {
+            page = (HeapPage) Database.getBufferPool().getPage(tid, new HeapPageId(this.getId(), pageNo), Permissions.READ_WRITE);
+            if (page.getNumEmptySlots() > 0) {
+                break;
+            }
+            // TODO: (shubham) release page if empty slot not found
+            pageNo++;
+        }
+
+        page = new HeapPage(new HeapPageId(this.getId(), pageNo), HeapPage.createEmptyPageData());
+        this.writePage(page);
+        page = (HeapPage)Database.getBufferPool().getPage(tid, new HeapPageId(this.getId(),pageNo),Permissions.READ_WRITE);
+        page.insertTuple(t);
+        return new ArrayList<>(Collections.singletonList(page));
         // not necessary for lab1
     }
 
@@ -119,7 +142,11 @@ public class HeapFile implements DbFile {
     public ArrayList<Page> deleteTuple(TransactionId tid, Tuple t) throws DbException,
             TransactionAbortedException {
         // some code goes here
-        return null;
+        HeapPage page = (HeapPage) Database.getBufferPool().getPage(tid, t.getRecordId().getPageId(), Permissions.READ_WRITE);
+        page.deleteTuple(t);
+        ArrayList<Page> pages = new ArrayList<Page>();
+        pages.add(page);
+        return pages;
         // not necessary for lab1
     }
 
