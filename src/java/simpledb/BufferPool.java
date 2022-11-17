@@ -163,8 +163,10 @@ public class BufferPool {
         ArrayList<Page> pagesToMarkDirty = Database.getCatalog().getDatabaseFile(tableId).insertTuple(tid, t);
         for (Page page : pagesToMarkDirty) {
             page.markDirty(true, tid);
+            if (!pages.containsKey(page.getId()) && pages.size() == this.numPages) {
+                evictPage();
+            }
             pages.put(page.getId(), page);
-            // TODO: check eviction here
         }
     }
 
@@ -188,8 +190,10 @@ public class BufferPool {
         DbFile hf = Database.getCatalog().getDatabaseFile(t.getRecordId().getPageId().getTableId());
         for (Page page : hf.deleteTuple(tid, t)) {
             page.markDirty(true, tid);
+            if (!pages.containsKey(page.getId()) && pages.size() == this.numPages) {
+                evictPage();
+            }
             pages.put(page.getId(), page);
-            // TODO: add eviction
         }
     }
 
@@ -260,8 +264,12 @@ public class BufferPool {
             pid = iter.next();
         }
         if (pid != null && pages.get(pid).isDirty() != null){
-            // should throw an exception but pass for the time being
-            // throw new DbException("ERROR - cannot evict any page, as all are dirty");
+            try {
+                flushPage(pid);
+            } catch (IOException io){
+                io.printStackTrace();
+                throw new DbException("ERROR - cannot evict any page, as all are dirty");
+            }
         }
         discardPage(pid);
     }
