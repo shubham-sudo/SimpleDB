@@ -1,4 +1,4 @@
-## **CS 660 Fall-2022 (Programming Assignment #1)**
+## **CS 660 Fall-2022 (Programming Assignment #1,2,3)**
 
 ### **Student Details**
 
@@ -14,6 +14,11 @@ _**Email**_ - kaushiks@bu.edu
 
     - Use of `ConcurrentHashMap` for defining private variable in `class Catalog` to make it thread safe.
     - Defined variable `pages` in `class BufferPool` using `ConcurrentHashMap` for thread safety.
+    - For `Join`, a simple nested loop join is used, in which it will iterate over one child only once and compare with each tuple of another child.
+      So, if relation R has N records and S has M records it will run do IO for (N + (N*M)).
+    - For `HashEquiJoin`, partitions are only done for one of the child and stored in-memory. The hasNext will pull one tuple from another child and
+      do hashing over the join value and pull that particular partition for first child. This way it will save some comparison assuming the data is
+      uniformly distributed
 
 2. Discuss and justify any changes you made to the API
 
@@ -26,26 +31,33 @@ _**Email**_ - kaushiks@bu.edu
     - _**class HeapPage**_ : Updated `getNumTuples` & `getHeaderSize` with the help of given doc on Lab webpage. Also, implemented the `iterator` method for returning an iterator over the `Tuple` objects stored on this page.
     - _**class HeapFile**_ : Updated the `readPage` method to read a page from `HeapFile`. I am using `RandomAccessFile` to seek over the file randomly and read the `BufferPool.getPageSize` bytes data each time. The `pageNumber` is used to calculate the address of the page in the disk. I have also implemented `DbFileIterator` to iterate over all of the tuples we have in this `HeapFile`.
     - _**SeqScan**_ : This was easy as we just have to link this with the `HeapFile` and `DbFileIterator`.
-   - _**class BTreeFile**_ :
-      + _**findLeafPage()**_ : This method is used to pull leaf page as per the given Field key value. This is implemented
-        using recursion. If the Field value is passed as 'null', it will pull the left most page at leaf level.
-      + _**splitLeafPage()**_ : This method help in splitting the leaf page when we insert more values and the leaf page is full.
-        The middle node is copied to the internal nodes after splitting and parent & sibling pointer are updated.
-      + _**splitInternalPage()**_ : The method do the splitting part for the internal node. This also increases the height
-        of the BTree and push the middle node towards the parent node.
-      + _**stealFromLeafPage()**_ : The method is used for the Deletion purpose, if the tuples are less than half full in any leaf node.
-        It will try to steal nodes from its siblings.
-      + _**stealFromLeftInternalPage()**_ : This method is for stealing nodes from the sibling when the internal node
-        is out of its half full capacity.
-      + _**stealFromRightInternalPage()**_ : This is similar to the upper method just be used when stealing nodes from
-        right internal node, instead of left.
-      + _**mergeLeafPages()**_ : While deletion if the stealing doesn't work out than merging of two nodes happens in BTree.
-        The mergeLeafPages merges the leaf pages whenever required.
-      + _**mergeInternalPages()**_ : This is same as above just to merge the internal nodes.
+    - _**class BTreeFile**_ :
+       + _**findLeafPage()**_ : This method is used to pull leaf page as per the given Field key value. This is implemented
+         using recursion. If the Field value is passed as 'null', it will pull the left most page at leaf level.
+       + _**splitLeafPage()**_ : This method help in splitting the leaf page when we insert more values and the leaf page is full.
+         The middle node is copied to the internal nodes after splitting and parent & sibling pointer are updated.
+       + _**splitInternalPage()**_ : The method do the splitting part for the internal node. This also increases the height
+         of the BTree and push the middle node towards the parent node.
+       + _**stealFromLeafPage()**_ : The method is used for the Deletion purpose, if the tuples are less than half full in any leaf node.
+         It will try to steal nodes from its siblings.
+       + _**stealFromLeftInternalPage()**_ : This method is for stealing nodes from the sibling when the internal node
+         is out of its half full capacity.
+       + _**stealFromRightInternalPage()**_ : This is similar to the upper method just be used when stealing nodes from
+         right internal node, instead of left.
+       + _**mergeLeafPages()**_ : While deletion if the stealing doesn't work out than merging of two nodes happens in BTree.
+         The mergeLeafPages merges the leaf pages whenever required.
+       + _**mergeInternalPages()**_ : This is same as above just to merge the internal nodes.
 
-   - _**class IndexPredicate**_ : Updated to compare the field values using the given operators. The operators are defined as enums
-     The Comparison is done based in the given '>=', '<=', '==' operators.
-   - _**class Predicate**_ : Defined the required class variables to support IndexPredicate class operations.
+    - _**class IndexPredicate**_ : Updated to compare the field values using the given operators. The operators are defined as enums
+      The Comparison is done based in the given '>=', '<=', '==' operators.
+    - _**class Predicate**_ : Defined the required class variables to support IndexPredicate class operations.
+    - _**Filter, Join & HashEquiJoin**_ : Added required class variables and implemented the hasNext() method call to return the results after filter,
+      join and hashJoin. The strategy used for join is simple nested loop join and
+      for hashEquiJoin I have used hashing and making partition for one child.
+    - _**IntegerAggregator, StringAggregator, Aggregate**_ : Implemented integer & string aggregate classes for aggregating on the required column
+      based on groupby if given.
+    - _**HeapPage, HeapFile**_ : Implemented insert and delete tuples method to add mutability of tuples in pages or file. Also, eviction is checked for both operations.
+    - _**Insert, Delete**_ : Insert and delete operators are implemented for inserting the new record or deleting the existing one.
 
 3. Describe any missing or incomplete elements of your code
 
