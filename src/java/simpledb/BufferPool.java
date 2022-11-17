@@ -161,11 +161,10 @@ public class BufferPool {
         // some code goes here
         // not necessary for lab1
         ArrayList<Page> pagesToMarkDirty = Database.getCatalog().getDatabaseFile(tableId).insertTuple(tid, t);
-        Iterator<Page> iter = pagesToMarkDirty.iterator();
-        while (iter.hasNext()) {
-            Page page = iter.next();
+        for (Page page : pagesToMarkDirty) {
             page.markDirty(true, tid);
             pages.put(page.getId(), page);
+            // TODO: check eviction here
         }
     }
 
@@ -190,6 +189,7 @@ public class BufferPool {
         for (Page page : hf.deleteTuple(tid, t)) {
             page.markDirty(true, tid);
             pages.put(page.getId(), page);
+            // TODO: add eviction
         }
     }
 

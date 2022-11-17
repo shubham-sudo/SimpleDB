@@ -72,12 +72,7 @@ public class Filter extends Operator {
             Tuple tuple = child.next();
 
             if (predicate.filter(tuple)) {
-                Tuple newTuple = new Tuple(this.tupleDesc);
-                newTuple.setRecordId(tuple.getRecordId());
-                for (int i = 0; i < tupleDesc.numFields(); i++) {
-                    newTuple.setField(i, tuple.getField(i));
-                }
-                return newTuple;
+                return tuple;
             }
         }
         return null;

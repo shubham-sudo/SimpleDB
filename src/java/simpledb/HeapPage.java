@@ -258,8 +258,8 @@ public class HeapPage implements Page {
         if (!(pid.equals(this.pid)) || (tupleNo == -1) || !(this.isSlotUsed(tupleNo))) {
             throw new DbException("Tuple does not exits");
         }
-        t.setRecordId(new RecordId(pid, -1));
-        this.tuples[tupleNo] = null;
+//        t.setRecordId(new RecordId(pid, -1));
+//        this.tuples[tupleNo] = null;
         this.markSlotUsed(tupleNo, false);
     }
 
@@ -344,7 +344,7 @@ public class HeapPage implements Page {
         if (value){
             header[headerIndex] |= (1 << i % 8);
         } else {
-            header[headerIndex] &= ~(1 << i % 8);
+            header[headerIndex] &= (0xFF ^ (1 << i % 8));
         }
     }
 
@@ -357,10 +357,11 @@ public class HeapPage implements Page {
         // some code goes here
         Iterator<Tuple> it = new Iterator<Tuple>() {
             private int currentIndex = 0;
+            private final int numTuples = (numSlots - getNumEmptySlots());
 
             @Override
             public boolean hasNext() {
-                return currentIndex < (numSlots - getNumEmptySlots()) && tuples[currentIndex] != null;
+                return currentIndex < numTuples && tuples[currentIndex] != null;
             }
 
             @Override
