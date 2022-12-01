@@ -111,7 +111,7 @@ public class JoinOptimizer {
             // HINT: You may need to use the variable "j" if you implemented
             // a join algorithm that's more complicated than a basic
             // nested-loops join.
-            return -1.0;
+            return cost1 + card1 * cost2 + card1 * card2;
         }
     }
 
@@ -157,7 +157,12 @@ public class JoinOptimizer {
             Map<String, Integer> tableAliasToId) {
         int card = 1;
         // some code goes here
-        return card <= 0 ? 1 : card;
+        if (joinOp == Predicate.Op.EQUALS) {
+            if (t1pkey) return card2;
+            else if (t2pkey) return card1;
+            else if (card1 >= card2) return card1;
+            else return card2;
+        }else return (int)(0.3 * card1 * card2);
     }
 
     /**
@@ -221,7 +226,27 @@ public class JoinOptimizer {
 
         // some code goes here
         //Replace the following
-        return joins;
+        PlanCache planCache = new PlanCache();
+        Set<LogicalJoinNode> hashSet = new HashSet<LogicalJoinNode>(joins);
+        Set<Set<LogicalJoinNode>> joinSet = enumerateSubsets(joins,1);
+        for (int i = 0; i <= joinSet.size();++i) {
+            for (Set<LogicalJoinNode> set : enumerateSubsets(joins,i)) {
+                CostCard bestPlan = new CostCard();
+                bestPlan.plan = null;
+                bestPlan.cost = Double.MAX_VALUE;
+                bestPlan.card = Integer.MAX_VALUE;
+                for (LogicalJoinNode n : set) {
+                    CostCard plan = computeCostAndCardOfSubplan(stats, filterSelectivities,
+                            n,set,bestPlan.cost,planCache);
+                    if (plan != null && plan.cost < bestPlan.cost) bestPlan = plan;
+                }
+                planCache.addPlan(set, bestPlan.cost, bestPlan.card, bestPlan.plan);
+            }
+        }
+
+        Vector<LogicalJoinNode> best = planCache.getOrder(hashSet);
+        if (explain) printJoins(best,planCache,stats,filterSelectivities);
+        return best;
     }
 
     // ===================== Private Methods =================================
